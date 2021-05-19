@@ -17,6 +17,7 @@
     - [提交更新](#提交更新)
     - [移除文件](#移除文件)
     - [移动文件](#移动文件)
+    - [查看提交历史](#查看提交历史)
 
 # 分布式版本控制系统
 
@@ -175,4 +176,28 @@ $ git mv README.md README
 $ mv README.md README
 $ git rm README.md
 $ git add README
+```
+
+### 查看提交历史
+可以使用`git log`查看提交的历史
+
+```
+$ git log
+commit ca82a6dff817ec66f44342007202690a93763949
+Author: Scott Chacon <schacon@gee-mail.com>
+Date:   Mon Mar 17 21:52:11 2008 -0700
+
+    changed the version number
+
+commit 085bb3bcb608e1e8451d4b2432f8ecbe6306e7e7
+Author: Scott Chacon <schacon@gee-mail.com>
+Date:   Sat Mar 15 16:40:33 2008 -0700
+
+    removed unnecessary test
+
+commit a11bef06a3f659402fe7563abf99ad00de2209e6
+Author: Scott Chacon <schacon@gee-mail.com>
+Date:   Sat Mar 15 10:31:28 2008 -0700
+
+    first commit
 ```
