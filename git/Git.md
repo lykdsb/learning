@@ -239,6 +239,15 @@ git branch testing
 
 ![HEAD指针](https://git-scm.com/book/en/v2/images/head-to-master.png)
 
+如果单独使用`git branch`指令则能够查看所有的分支情况
+
+```
+$ git branch
+   iss53
+* master
+   testing
+```
+
 ### 分支切换
 使用以下指令可以更改当前所在的分支（HEAD指针指向）
 
