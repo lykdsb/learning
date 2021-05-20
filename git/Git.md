@@ -18,6 +18,11 @@
     - [移除文件](#移除文件)
     - [移动文件](#移动文件)
     - [查看提交历史](#查看提交历史)
+  - [git分支](#git分支)
+    - [git分支原理](#git分支原理)
+    - [分支创建](#分支创建)
+    - [分支切换](#分支切换)
+    - [分支新建与合并](#分支新建与合并)
 
 # 分布式版本控制系统
 
@@ -201,3 +206,106 @@ Date:   Sat Mar 15 10:31:28 2008 -0700
 
     first commit
 ```
+## git分支
+
+### git分支原理
+git在进行提交之后，存储的是三种对象
+
+* blob对象：保存文件快照信息
+* 树对象：保存文件目录结构和blob对象索引
+* 提交对象：保存指向树的指针和提交信息
+
+![git仓库对象](https://git-scm.com/book/en/v2/images/commit-and-tree.png)
+
+修改之后进行提交，提交对象会包含一个指向上一个提交的指针
+
+![提交对象](https://git-scm.com/book/en/v2/images/commits-and-parents.png)
+
+git的分支实际上是指向不同提交对象的指针
+
+![分支](https://git-scm.com/book/en/v2/images/branch-and-history.png)
+
+
+### 分支创建
+使用指令`git branch`可以在当前提交对象上创建一个分支
+
+```
+git branch testing
+```
+
+![创建分支](https://git-scm.com/book/en/v2/images/two-branches.png)
+
+而git通过HEAD指针判断当前处于哪一个分支中
+
+![HEAD指针](https://git-scm.com/book/en/v2/images/head-to-master.png)
+
+### 分支切换
+使用以下指令可以更改当前所在的分支（HEAD指针指向）
+
+```
+git checkout testing
+```
+
+这样就会将HEAD指针指向testing分支
+
+### 分支新建与合并
+
+分支的新建可以使用以下指令
+
+```
+$ git checkout -b iss53
+```
+使用`-b`可以一次性使用下面两个指令
+```
+$ git branch iss53
+$ git checkout iss53
+```
+
+**特别注意** 在进行分支切换时最好将本分支的内容进行提交
+
+如果使用以下的方式进行修改
+```
+$ git checkout -b hotfix
+Switched to a new branch 'hotfix'
+$ vim index.html
+$ git commit -a -m 'fixed the broken email address'
+[hotfix 1fb7853] fixed the broken email address
+ 1 file changed, 2 insertions(+)
+```
+![修复](https://git-scm.com/book/en/v2/images/basic-branching-4.png)
+
+这个时候如果确定修改时正确的，可以将主分支进行合并
+```
+$ git checkout master
+$ git merge hotfix
+Updating f42c576..3a0874c
+Fast-forward
+ index.html | 2 ++
+ 1 file changed, 2 insertions(+)
+```
+这种情况被成为**Fast-forward**快进，即直接将指针向后移动
+
+如果一个分支已经没有用了，应该使用以下命令删除该分支
+
+```
+git branch -d hotfix
+```
+
+如果不同分支在一个地方分叉开来不能够进行会计
+
+![](https://git-scm.com/book/en/v2/images/basic-merging-1.png)
+
+那么会进行一个三方合并
+
+![](https://git-scm.com/book/en/v2/images/basic-merging-2.png)
+
+三方合并关键点在于最终合并有两个祖先
+
+但是进行三方合并经常会有发生冲突的情况（如修改一个文件的统一部分），这个时候要手动进行冲突的解决
+
+还可以使用以下命令
+```
+git mergetool
+```
+
+使用图形化界面进行合并
