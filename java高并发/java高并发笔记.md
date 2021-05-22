@@ -217,23 +217,37 @@ Thread thread1 = new Thread(new Runnable(){
                 }
             }
         });
-        thread1.start();
-        try {
-            Thread.sleep(2000);
-        } catch (InterruptedException e) {
-            e.printStackTrace();
-        }
-        thread1.interrupt();
+thread1.start();
+try 
+{
+
+     Thread.sleep(2000);
+     
+} 
+catch (InterruptedException e)
+{
+
+    e.printStackTrace();
+
+}
+
+thread1.interrupt();
 ```
 
 使用sleep方法可以让当前线程休眠一段时间，**调用这个方法会抛出一个InterruptedException**，程序必须捕获并且处理这个异常
 
 ```java
-try{
-Thread.sleep(2000);
-}catch(InterruptedException e)
+try
 {
+
+Thread.sleep(2000);
+
+}
+catch(InterruptedException e)
+{
+
 System.out.println("Thread is sleeping");
+
 }
 ```
 
