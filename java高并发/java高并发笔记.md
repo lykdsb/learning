@@ -14,6 +14,11 @@
     - [原子性](#原子性)
     - [可见性](#可见性)
     - [有序性](#有序性)
+- [java并行程序基础](#java并行程序基础)
+  - [线程](#线程)
+  - [线程的创建](#线程的创建)
+  - [线程中断](#线程中断)
+  - [wait和notify](#wait和notify)
 # 基本概念
 
 ## 同步和异步
@@ -150,3 +155,86 @@ public void reader()
 如果线程a调用writer，线程b调用reader可能实际执行起来就成了
 
 writer先调用flag=true，然后还没执行a=1,就进入了reader里面的`int i=a+1`,导致完全不一样的结果
+
+# java并行程序基础
+
+## 线程
+线程的所有状态都在Thread的State中进行定义
+
+```java
+public enum State
+{
+    NEW,
+    RUNNABLE,
+    BLOCKED,
+    WAITING,
+    TIMED_WAITING,
+    TERMINATED
+}
+```
+
+* NEW 表示线程刚刚创建，还没有执行，**等到start方法调用的时候才开始执行**
+* RUNNABLE 表示线程已经执行
+* BLOCKED 表示线程进入临界区进入阻塞状态
+* WAITING 表示无时间限制等待状态（等待针对的是notify方法）
+* TIMED_WAITING 表示有时间限制等待状态
+* TERMINATED 线程执行完毕表示结束
+
+***  
+从NEW出发后不能够再回到NEW状态，处于TERMINATED状态的也不能回到RUNNABLE状态
+***
+
+## 线程的创建
+新建一个线程只要new一个线程对象然后使用start进行运行即可  
+**不要使用run，run只是单独运行这一方法**
+
+还可以使用实现Runnable方法的方式进行线程的创建（最好使用Runnable，**因为java的继承资源是有限的**），能用接口尽量使用接口的方式进行线程的创建
+
+> 注意Thread有一个重要的构造方法
+> ```java
+> public Thread(Runnable target)
+> ```
+> 这也是Thread执行run的默认方式
+
+## 线程中断
+
+线程中断不是直接让线程退出，而是向线程发出一个通知，至于线程接到通知之后如何处理完全由目标线程自行决定（**实际上只是打上一个标记**）。**因为如果无条件退出可能会导致比较严重的问题**
+
+线程可以使用interrupted方法进行中断，但是最好和中断处理代码配合使用  
+如下  
+```java
+Thread thread1 = new Thread(new Runnable(){
+            @Override
+            public void run(){
+                while(true)
+                {
+                    if(Thread.currentThread().isInterrupted())
+                    {
+                        System.out.println("Interrupted");
+                        break;
+                    }
+                    Thread.yield();
+                }
+            }
+        });
+        thread1.start();
+        try {
+            Thread.sleep(2000);
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        }
+        thread1.interrupt();
+```
+
+使用sleep方法可以让当前线程休眠一段时间，**调用这个方法会抛出一个InterruptedException**，程序必须捕获并且处理这个异常
+
+```java
+try{
+Thread.sleep(2000);
+}catch(InterruptedException e)
+{
+System.out.println("Thread is sleeping");
+}
+```
+
+## wait和notify
