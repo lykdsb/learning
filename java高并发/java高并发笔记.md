@@ -21,6 +21,9 @@
   - [wait和notify](#wait和notify)
   - [join和yield](#join和yield)
   - [volatile](#volatile)
+  - [守护线程](#守护线程)
+  - [优先级](#优先级)
+  - [synchronized](#synchronized)
 # 基本概念
 
 ## 同步和异步
@@ -356,3 +359,25 @@ public class Solution {
 
 ## volatile
 volatile关键字可以保证线程对于一个变量的修改能够让所有线程知道
+
+## 守护线程
+守护线程是系统的守护者，在后台完成一些系统性的服务，与之相对应的是用户线程  
+⚠️：所有用户线程结束之后守护线程也会自然结束  
+
+可以使用以下语句设定守护线程
+```java
+t.setDaemon(true);
+```
+**设定守护线程一定要在调用start方法之前**
+
+## 优先级
+可以使用`setPriority`设定线程执行的优先级，一般优先级高的会比较容易执行（**但是不是优先级高的一定优先执行**）
+
+## synchronized
+synchronized的作用是实现线程之间的同步，保证每一次只有一个线程进入同步块  
+synchronized一般有三种用法
+* 作用于加锁对象：对给定的对象加锁
+* 作用于实例方法：对于当前实例加锁
+* 作用于静态方法：相当于对当前类进行加锁
+
+
