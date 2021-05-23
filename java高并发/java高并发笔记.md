@@ -19,6 +19,8 @@
   - [线程的创建](#线程的创建)
   - [线程中断](#线程中断)
   - [wait和notify](#wait和notify)
+  - [join和yield](#join和yield)
+  - [volatile](#volatile)
 # 基本概念
 
 ## 同步和异步
@@ -222,7 +224,7 @@ try
 {
 
      Thread.sleep(2000);
-     
+
 } 
 catch (InterruptedException e)
 {
@@ -252,3 +254,105 @@ System.out.println("Thread is sleeping");
 ```
 
 ## wait和notify
+
+wait 和notify 这两个方法不是在Thread中的，而是在Object中的  
+当在一个对象实例上使用wait方法之后，线程就会在这个对象上等待，直到其他线程在这个对象上调用notify
+
+---
+
+如果有多个线程调用wait，**则会进入一个等待队列**，如果有线程调用notify则会**随机选择一个队列中的线程**
+
+---
+还可以使用notifyAll会**激活等待队列中所有等待的线程**而不是随机选择一个
+
+---
+
+⚠️注意：wait/notify必须在对应的synchronized语句中
+
+可以使用以下例子说明使用的方式
+```java
+public class Solution {
+    final static Object object=new Object();
+    public static class T1 extends Thread
+    {
+        @Override
+        public void run()
+        {
+            synchronized (object) {
+                System.out.println(System.currentTimeMillis() + ":T1 Starts");
+                try {
+                    System.out.println(System.currentTimeMillis()+":T1 waits");
+                    object.wait();
+                } catch (InterruptedException e) {
+                    e.printStackTrace();
+                }
+                System.out.println(System.currentTimeMillis()+":T1 ends");
+            }
+        }
+    }
+    public static class T2 extends Thread
+    {
+        @Override
+        public void run()
+        {
+            synchronized (object)
+            {
+                System.out.println(System.currentTimeMillis() + ":T2 Starts");
+                System.out.println(System.currentTimeMillis() + ":T2 notifies");
+                object.notify();
+                try {
+                    Thread.sleep(2000);
+                } catch (InterruptedException e) {
+                    e.printStackTrace();
+                }
+
+            }
+        }
+    }
+    public static void main(String[]args)
+    {
+        Thread t1=new T1();
+        Thread t2=new T2();
+        t1.start();
+        t2.start();
+    }
+}
+```
+可以发现不是执行notify后等待队列马上就可以执行，而是**需要等待当前线程释放锁之后**才可以执行
+
+⚠️：wait和sleep的区别就是wait会释放目标的锁，而sleep不会释放任何资源
+
+## join和yield
+
+join表示进行等待，会阻塞当前线程直到目标线程执行完毕，也可以在其中传入一个最大等待时间
+```java
+public class Solution {
+    public volatile static int i=0;
+    public static class T1 extends Thread
+    {
+        @Override
+        public void run() {
+            for(i=0;i<10000;i++);
+
+        }
+    }
+    public static void main(String[]args)
+    {
+        Thread t1=new T1();
+        t1.start();
+        try {
+            t1.join();
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        }
+        System.out.println(i);
+    }
+}
+```
+
+如果不使用join，可能输出会很小，但是使用join之后结果一定是10000
+
+而yield会使当前线程让出CPU，但是这不代表该线程不执行了。**调用该方法后，该线程会重新参与资源的争夺**
+
+## volatile
+volatile关键字可以保证线程对于一个变量的修改能够让所有线程知道
