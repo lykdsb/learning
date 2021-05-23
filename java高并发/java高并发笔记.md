@@ -24,6 +24,10 @@
   - [守护线程](#守护线程)
   - [优先级](#优先级)
   - [synchronized](#synchronized)
+- [JDK并发包](#jdk并发包)
+  - [重入锁](#重入锁)
+    - [重入锁的使用](#重入锁的使用)
+    - [公平锁](#公平锁)
 # 基本概念
 
 ## 同步和异步
@@ -261,14 +265,11 @@ System.out.println("Thread is sleeping");
 wait 和notify 这两个方法不是在Thread中的，而是在Object中的  
 当在一个对象实例上使用wait方法之后，线程就会在这个对象上等待，直到其他线程在这个对象上调用notify
 
----
 
 如果有多个线程调用wait，**则会进入一个等待队列**，如果有线程调用notify则会**随机选择一个队列中的线程**
 
----
 还可以使用notifyAll会**激活等待队列中所有等待的线程**而不是随机选择一个
 
----
 
 ⚠️注意：wait/notify必须在对应的synchronized语句中
 
@@ -380,4 +381,37 @@ synchronized一般有三种用法
 * 作用于实例方法：对于当前实例加锁
 * 作用于静态方法：相当于对当前类进行加锁
 
+# JDK并发包
+
+## 重入锁
+### 重入锁的使用
+可重入锁需要使用显式的加锁、释放的过程来进行控制
+
+```java
+public static ReentrantLock lock =new ReentrantLock();
+lock.lock();
+//同步的代码块
+lock.unlock();
+```
+可重入锁的出现主要是解决这样一个问题：
+要允许一个线程连续获得同一把锁，**否则将会产生死锁**，程序就会卡死在第二次申请锁的过程中
+
+使用可重入锁可以指定限时等待的过程，让一个线程如果拿不到锁的话，超过时间自动放弃
+```java
+if(lock.tryLock(5,TimeUnit.SECONDS))
+{
+    System.out.println("got lock");
+}
+else
+{
+    System.out.println("get lock failed");
+}
+```
+
+同时可以使用不带参数的方式
+```java
+lock.tryLock();
+```
+会直接尝试获取锁，如果获取失败则返回false
+### 公平锁
 
