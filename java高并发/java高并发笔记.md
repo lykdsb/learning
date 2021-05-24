@@ -28,6 +28,8 @@
   - [重入锁](#重入锁)
     - [重入锁的使用](#重入锁的使用)
     - [公平锁](#公平锁)
+    - [Condition](#condition)
+  - [信号量](#信号量)
 # 基本概念
 
 ## 同步和异步
@@ -415,3 +417,65 @@ lock.tryLock();
 会直接尝试获取锁，如果获取失败则返回false
 ### 公平锁
 
+ReentrantLock可以指定锁的申请的是否公平
+```java
+public ReentrantLock(boolean fair);
+```
+* 公平性：公平的锁会按照时间的先后顺序，保证先到的线程优先进行处理，这样不会发生饥饿的现象，只要排队就能够获得资源
+* 非公平性：不能够保证线程的执行顺序和线程来的顺序的不同
+
+公平锁开起来比较优美，但是**实现公平锁需要维护一个队列，因此性能比较低**
+
+### Condition
+Condition作用和wait/notify大致相同，但是wait/notify只能够和synchronized进行合作使用，而Condition是与重入锁相关的
+
+创建一个Condition是使用锁中的`newCondition()`方法，这样可以创建一个**与这个锁绑定的condition**
+
+* condition.await()==object.wait()
+* condition.signal()==object.notify()
+* condition.signalAll()==object.notifyAll()
+
+调用这些方法也要在持有锁的情况下才能够进行调用
+
+## 信号量
+使用信号量可以控制多个线程对于一个资源的访问，而不是只允许一个线程对于资源进行访问
+
+```java
+public Semaphore(int permits);
+public Semaphore(int permits,boolean fair);
+```
+permits表示该信号量的准入数
+使用`acquire`,`release`控制获取一个准入的许可和释放一个准入的许可
+
+```java
+public class Solution {
+    public static class Sema implements Runnable
+    {
+        final Semaphore semaphore=new Semaphore(5);
+        @Override
+        public void run()
+        {
+            try {
+                semaphore.acquire();
+                Thread.sleep(2000);
+                System.out.println(Thread.currentThread().getId()+"done!");
+                semaphore.release();
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+            }
+
+        }
+    }
+
+    public static void main(String[] args) {
+        ExecutorService exec= Executors.newFixedThreadPool(20);
+        final Sema sema=new Sema();
+        for(int i=0;i<100;i++)
+            exec.submit(sema);
+    }
+}
+```
+
+运行上面的程序可以发现是每2s打印5条语句，说明每次同时有五个线程获取了访问权限
+
+一定要注意`acquire()`和`release()`的配套使用，要不然会导致可访问的权限数量越来越少
