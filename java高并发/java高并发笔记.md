@@ -30,6 +30,8 @@
     - [公平锁](#公平锁)
     - [Condition](#condition)
   - [信号量](#信号量)
+  - [读写锁](#读写锁)
+  - [CountDownLach](#countdownlach)
 # 基本概念
 
 ## 同步和异步
@@ -479,3 +481,64 @@ public class Solution {
 运行上面的程序可以发现是每2s打印5条语句，说明每次同时有五个线程获取了访问权限
 
 一定要注意`acquire()`和`release()`的配套使用，要不然会导致可访问的权限数量越来越少
+
+## 读写锁
+可以使用`ReadWriteLock`来作为读写锁  
+读写锁的出现主要是因为**如果使用可重入锁的话，如果有读操作和写操作，同时读操作会相互阻塞，这是不合理的，因为读操作不会对于数据进行修改**
+
+如果系统中的读操作远远大于写操作的时候，读写锁的作用可以说是非常好的
+
+读写锁可以使用以下的方式进行使用(大致使用方式和可重入锁的差不多)
+```java
+ReadWriteLock RWLock=new ReadWriteLock();
+RWLock.readLock().lock();
+RWLock.readLock().unlock();
+RWLock.writeLock().lock();
+RWLock.writeLock().unlock();
+```
+
+## CountDownLach
+`CountDownLach`是一个倒计时器，可以对于线程进行阻塞，然后在倒计时完成之后允许线程继续执行
+* 使用`countDown`将计数减一
+* 使用`await`使线程进行等待
+
+```java
+public class Solution {
+    static final CountDownLatch end=new CountDownLatch(10);
+    static final CountDownDemo demo=new CountDownDemo();
+    public static class CountDownDemo implements Runnable
+    {
+
+
+        @Override
+        public void run()
+        {
+            try {
+                Thread.sleep(2000);
+                System.out.println("System Op Completed");
+                end.countDown();
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+            }
+
+        }
+    }
+
+    public static void main(String[] args) {
+
+        ExecutorService exec= Executors.newFixedThreadPool(10);
+        for(int i=0;i<10;i++)
+            exec.submit(demo);
+        try {
+            end.await();
+            System.out.println("Fire");
+            exec.shutdown();
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        }
+
+
+    }
+}
+```
+
