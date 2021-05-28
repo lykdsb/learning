@@ -32,6 +32,11 @@
   - [信号量](#信号量)
   - [读写锁](#读写锁)
   - [CountDownLach](#countdownlach)
+  - [线程池](#线程池)
+    - [线程池的概念](#线程池的概念)
+    - [线程池的种类](#线程池的种类)
+    - [计划任务](#计划任务)
+    - [线程池的实现](#线程池的实现)
 # 基本概念
 
 ## 同步和异步
@@ -541,4 +546,75 @@ public class Solution {
     }
 }
 ```
+## 线程池
+### 线程池的概念
+如果过多使用线程会浪费很多系统资源，如果对于每一个任务都创建一个线程，**可能创建线程的时间已经超过任务执行的时间**  
+> 所以线程的数量必须得到控制
+
+解决这个问题的方式就是线程池，即：使用时将线程从线程池中取出，使用完毕后放回线程池  
+
+### 线程池的种类  
+* `newFixedThreadPool`:固定线程数量的的线程池，如果有任务来，线程池中如果有空闲线程，则使用空闲线程执行，否则进入等待队列
+有线程空闲的时候执行等待队列中的线程
+* `newSingleThreadExecutor`：只有一个线程的线程池，若多余一个的线程提交，会进入等待队列中，如果线程空闲，则按照先入先出的方式顺序执行任务
+* `newCachedThreadPool`:：一个根据实际情况调整线程池大小的小城池，如果有线程空闲，则使用线程池中空闲的线程，否则创建新的线程，执行完毕后进入线程池
+* `newScheduledThreadPool`:给定时间进行执行的线程池
+* `newSingleScheduledThreadPool`：给定时间进行执行的单一线程池
+### 计划任务
+`newScheduledThreadPool`主要有以下几种方法
+* scheduleAtFixRate：
+    ```java
+    public ScheduledFuture<> scheduleAtFixRate(
+        Runnable command，
+        long initialDelay,
+        long period，
+        TimeUnit unit
+    )；
+    ```
+    任务在初始延迟之后开始执行，后续任务按一定周期执行，**与上一个任务的结束时间无关**
+* scheduleAtFixDelay:
+    ```java
+    public ScheduledFuture<> scheduleAtFixDelay(
+        Runnable command，
+        long initialDelay,
+        long period，
+        TimeUnit unit
+    )；
+    ```
+    任务在初始延迟之后开始执行，**后续任务在前一个任务结束后的固定时间之后执行**
+
+### 线程池的实现
+所有线程池的种类的构造方法都是`ThreadPoolExecutor`的封装
+```java
+public ThreadPoolExecutor(
+    int corePoolSize,
+    int maxmumPoolSize,
+    long keepAliveTime,
+    TimeUnit unit,
+    BlockQueue<Runnable> workQueue,
+    ThreadFactory threadFactory,
+    RejectedRejectedExecutionHandler handler
+)
+```
+* corePoolSize：核心池线程数量
+* maxmumPoolSize：最大线程数量
+* keepAliveTime：线程数量超过核心池数量时，多余线程的存活时间
+* unit：时间单位
+* BlockQueue：阻塞队列
+* ThreadFatory：线程工厂，一般使用默认的
+* handler：拒绝策略
+
+阻塞队列：
+阻塞队列可以选择以下几种类型  
+*  直接提交的队列：`SynchronousQueue`提交的任务不会被真实保存，总是会直接提交给线程池执行，一般需要配合比较大的maxmumPoolSize
+*  有界的任务队列：`ArrayBlockingQueue`需要传入最大容量，是有最大容量的任务队列
+*  无界的任务队列：`LinkedBlockingQueue`没有最大容量，线程数量永远不会超过corePoolSize
+*  优先任务队列：有优先级的任务队列
+
+拒绝策略：
+jdk内置四种拒绝策略
+* AbortPolicy：抛出异常
+* CallerRunsPolicy：在调用者线程中运行被抛弃的线程
+* DiscardOldestPolicy：丢弃最老的请求，再次提交
+* DiscardPolicy：丢弃所有无法处理的任务
 
