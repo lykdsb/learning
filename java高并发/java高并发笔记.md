@@ -37,6 +37,17 @@
     - [线程池的种类](#线程池的种类)
     - [计划任务](#计划任务)
     - [线程池的实现](#线程池的实现)
+    - [线程数量的选择](#线程数量的选择)
+  - [并发容器(待补完)](#并发容器待补完)
+    - [ConcurrentHashMap](#concurrenthashmap)
+- [锁优化](#锁优化)
+  - [提高锁的性能的几种方式](#提高锁的性能的几种方式)
+    - [减少持有时间](#减少持有时间)
+    - [减少锁的粒度](#减少锁的粒度)
+    - [使用读写分离锁](#使用读写分离锁)
+    - [锁分离](#锁分离)
+    - [锁粗化](#锁粗化)
+  - [JDK的锁优化](#jdk的锁优化)
 # 基本概念
 
 ## 同步和异步
@@ -618,3 +629,84 @@ jdk内置四种拒绝策略
 * DiscardOldestPolicy：丢弃最老的请求，再次提交
 * DiscardPolicy：丢弃所有无法处理的任务
 
+ThreadFactory：
+线程池通过`ThreadFactory`进行接口的创建
+```java
+Thread newThread(Runnable r);
+```
+可以使用ThreadFactory对于线程进行一些统一的操作
+
+### 线程数量的选择
+一般线程池中的线程数量不能够太大也不能够太小，一般可以使用以下公式进行计算
+
+$Nthreads=Ncpu*Ucpu*(1+W/C)$
+* Ncpu是CPU的数量
+* Ucpu是目标CPU的使用率
+* W/C是等待时间与计算时间的比率
+
+## 并发容器(待补完)
+常用的并发容器主要有以下几种
+* ConcurrentHashMap
+* CopyOnWriteArrayList：在读多写少的情况下效率非常高
+* ConcurrentLinkedQueue：高效的并发队列
+* BlockingQueue：阻塞队列
+* ConcurrentSkipListMap：跳表的实现
+
+### ConcurrentHashMap
+因为HashMap本身是线程不安全的，如果直接使用synchronized关键字等进行同步的话会导致性能比较低
+
+# 锁优化
+## 提高锁的性能的几种方式
+### 减少持有时间
+应该尽可能减少线程持有锁的时间，如果线程中的某一步操作不需要进行同步就不要加锁
+```java
+public synchronized void syncMethod()
+{
+    othercode1();
+    mutextMethod();
+    othercode2();
+}
+public void syncMethod()
+{
+    othercode1();
+    synchronized(this){
+    mutextMethod();
+    }
+    othercode2();
+}
+```
+在这里显然下面的写法会比上面的写法好很多
+
+### 减少锁的粒度
+类似于1.7里面的ConcurrentHashMap会对于一个segment进行加锁而不是对于一整个数组进行加锁，明显提高了并发效率
+
+### 使用读写分离锁
+对于大多数情况下，特别是读多写少的情况下，应该尽量使用读写锁进行加锁
+
+### 锁分离
+锁分离是读写锁思想的延伸,比如对于一个队列进行操作，take()和put()一个发生在队首，一个发生在队尾，一般不会发生冲突，这时分别上锁会有更好的效率
+
+### 锁粗化
+对于一个锁的请求是需要时间的，如果对于一个锁不断进行请求或者释放会浪费很多时间，因此可以将多个请求合并为一个进行上锁
+如
+```java
+for(int i=0;i<1000;i++)
+{
+    synchronized(lock)
+    {
+        //code
+    }
+}
+```
+应该被替换为
+```java
+synchronized(lock)
+{
+        for(int i=0;i<1000;i++)
+        {
+            //code
+        }
+}
+```
+
+## JDK的锁优化
