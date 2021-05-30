@@ -52,6 +52,10 @@
     - [轻量级锁](#轻量级锁)
     - [自旋锁](#自旋锁)
     - [锁消除](#锁消除)
+  - [ThreadLocal](#threadlocal)
+  - [无锁](#无锁-1)
+    - [CAS](#cas)
+    - [AtomicInteger](#atomicinteger)
 # 基本概念
 
 ## 同步和异步
@@ -729,3 +733,33 @@ synchronized(lock)
 
 ### 锁消除
 java虚拟机在编译的过程中，通过对于上下文的扫描，去除不可能存在共享资源竞争的锁，通过锁消除可以节省无意义的请求锁的时间
+
+## ThreadLocal
+ThreadLocal是线程的一个局部变量
+一般按照下面的方式进行使用
+```java
+ThreadLocal<Integer> t1 = new ThreadLocal<Integer>();
+t1.get();
+t1.set(3);
+```
+`ThreadLocal`底层是通过`ThreadLocalMap`实现的，`ThreadLocalMap`是Thread的内部成员，保证了是与每一个Thread相关的
+
+ThreadLocal 常用于这样的情况：  
+比如如果每一个线程都需要使用一个Random进行随机数的生成，如果这些线程共用一个Random对象的话，会导致这些线程对于Random的访问有并发控制，但是实际上随机数的生成并不需要这一步，而只是需要每一个线程都有一个本地的Random进行随机数的生成就可以了，这样效率可以得到显著的提升
+
+## 无锁
+无锁是一种乐观策略，即假定每一次访问都不会发生冲突，因此不需要在访问的时候进行上锁而**只需要在访问结束之后对于值进行检查即可**
+
+### CAS
+CAS有三个参数CAS(V,E,N)
+只有V值等于E值的时候，才会将V值更新为N，否则什么都不做
+
+### AtomicInteger
+AtomicInteger核心是通过
+```java
+private volatile int value;
+```
+实现的，volatile保证了所有的线程读取的一致性
+
+一般CAS()操作需要通过自旋锁的形式进行，如果不一致则进入自旋，直到能够将值进行设定再继续
+
