@@ -56,6 +56,9 @@
   - [无锁](#无锁-1)
     - [CAS](#cas)
     - [AtomicInteger](#atomicinteger)
+    - [Unsafe类](#unsafe类)
+  - [并行模式和算法](#并行模式和算法)
+    - [单例模式](#单例模式)
 # 基本概念
 
 ## 同步和异步
@@ -763,3 +766,28 @@ private volatile int value;
 
 一般CAS()操作需要通过自旋锁的形式进行，如果不一致则进入自旋，直到能够将值进行设定再继续
 
+### Unsafe类
+CAS的实现大致如下
+```java
+public final boolean compareAndSet(int expect,int update)
+{
+    return unsafe.compareAndSwapInt(this,valueOffset,expect,update);
+}
+```
+CAS实际上使用`Unsafe`类进行实现的，`Unsafe`类实际上是对于指针的控制  
+但是不是任何情况都能够使用`Unsafe`类
+```java
+public static Unsafe getUnsafe(){
+    Class cc = Reflection.getCallerClass();
+    if(cc.getClassLoader()!=null)
+    {
+        throw new SecurityException("Unsafe");
+    }
+    return theUnsafe;
+}
+```
+即在获得Unsafe对象的时候会检查调用`getUnsafe`方法的类，如果其ClassLoader不为null就会抛出异常（通过Bootstrap进行加载的）
+
+## 并行模式和算法
+
+### 单例模式
