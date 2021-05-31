@@ -791,3 +791,62 @@ public static Unsafe getUnsafe(){
 ## 并行模式和算法
 
 ### 单例模式
+创建一个单例主要有两种方式  
+第一种方式如下：
+```java
+public class Singleton
+{
+    //public static int STATUS=1;
+    private Singleton(){
+
+    }
+    private static Singleton instance = new Singleton();
+    public static Singleton getInstance(){ 
+        return instance;
+    }
+}
+```
+但是这种方式有一种缺点，**实例在什么时候被创建是不确定的**  
+如果将第一行代码加上去的话，如果调用`Singleton.STATUS`的同时会初始化实例，这种情况是不符合我们的需求的
+
+第二种方式如下：
+```java
+public class LazySingleton
+{
+    private LazySingleton()
+    {
+
+    }
+    private static LazySingleton instance =null;
+    public static synchronized LazySingleton getInstance()
+    {
+        if(instance == null)
+            instance = new LazySingleton();
+        return instance;
+    }
+}
+```
+这种方式可以保证只有在第一次调用`getInstance()`的时候才会对于实例进行初始化  
+⚠️：获得实例的方法必须要加上`synchronized`保证只创建出一个实例  
+但是这种方式由于加上了锁，**所以肯定在高并发的情况下效率会相对较低一点**
+
+还有一种结合了两种方式的优点的方式
+```java
+public class StaticSingleton
+{
+    private StaticSingleton()
+    {
+
+    }
+    private static class SingletonHolder
+    {
+        private static StaticSingleton instance = new StaticSingleton();
+    }
+    public static StaticSingleton getInstance()
+    {
+        return SingletonHolder.instance;
+    }
+}
+```
+⚠️：静态内部类不会因为外部类的加载而加载，而是在第一次使用的时候进行加载  
+这种方式不仅保证了在第一次调用`getInstance`的时候进行实例的初始化，而且没有使用`synchronized`关键字，在高并发的场景下效率会相对更高
